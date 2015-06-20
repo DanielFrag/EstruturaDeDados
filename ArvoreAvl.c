@@ -15,6 +15,9 @@ typedef struct pont
 }tPontArvore;
 
 void exibirMenu();
+void exibirMenuArvore();
+void chamarArvore ();
+void chamarAvl();
 int inserir(tPontArvore *semente, int num);
 tNo* buscaAnterior(tNo *raiz, int num);
 void imprimirEmOrdem(tNo *caixa);
@@ -25,13 +28,50 @@ tNo* busca(tNo *raiz, int num);
 int removerNo (tPontArvore *semente, int num);
 void atualizarNivelDosElementos(tNo *raiz);
 int atualizarAltura(tNo *raiz, int altura);
-void balancearArvore (tPontArvore *semente);
-tNo* calcFatorEBalanceia(tNo *raiz, int *peso, tPontArvore *pImprimir);
+int balancearArvore (tPontArvore *semente);
+tNo* calcFatorEBalanceia(tNo *raiz, int *peso, tPontArvore *pImprimir, int *sinalizador);
 tNo* balanceadorDeSubArvore(tNo* raiz, tPontArvore *pImprimir);
 tNo* girarSentidoHorario(tNo* raiz);
 tNo* girarSentidoAntihorario(tNo* raiz);
+tNo* limparSubArvore(tNo *raiz);
 
 int main ()
+{
+    int escolha;
+
+    do
+    {
+        exibirMenu();
+        scanf("%i", &escolha); getchar();
+
+        switch(escolha)
+        {
+            case 1:
+                chamarArvore();
+                break;
+            case 2:
+                chamarAvl();
+                break;
+        }
+    }
+    while(escolha!=0);
+
+    return 0;
+}
+
+void exibirMenu()
+{
+    printf("Digite o numero da opcao que deseja\n");
+    printf("1 Arvore Binaria\n2 Arvore AVL\n0 Encerra\n\n");
+}
+
+void exibirMenuArvore()
+{
+    printf("Digite o numero da opcao que deseja\n");
+    printf("1 Inserir\n2 Exibir em ordem\n3 Remove\n0 Voltar\n\n");
+}
+
+void chamarArvore ()
 {
     int numero, escolha;
     tPontArvore semente;
@@ -41,7 +81,7 @@ int main ()
 
     do
     {
-        exibirMenu();
+        exibirMenuArvore();
         scanf("%i", &escolha); getchar();
 
         switch(escolha)
@@ -58,15 +98,9 @@ int main ()
                 imprimirEmOrdem(semente.raiz);
                 break;
             case 3:
-                exibirEmNiveis(semente);
-                break;
-            case 4:
                 printf("digite o numero a ser removido: ");
                 scanf("%i", &numero);
                 removerNo(&semente, numero);
-                break;
-            case 5:
-                balancearArvore(&semente);
                 break;
             case 0:
                 break;
@@ -75,16 +109,78 @@ int main ()
                 break;
 
         }
-    }
-    while(escolha!=0);
 
-    return 0;
+        printf("\nResultado:\n");
+        exibirEmNiveis(semente);
+
+    }while(escolha!=0);
+
+    semente.raiz = limparSubArvore(semente.raiz);
 }
 
-void exibirMenu()
+void chamarAvl()
 {
-    printf("Digite o numero da opcao que deseja\n");
-    printf("1 Inserir\n2 Exibir em ordem\n3 Exibir como arvore\n4 Remove\n5 Balancear\n0 Encerra\n\n");
+    int numero, escolha, rotacoes;
+    tPontArvore semente;
+
+    semente.altura=0;
+    semente.raiz=NULL;
+
+    do
+    {
+        exibirMenuArvore();
+        scanf("%i", &escolha); getchar();
+
+        switch(escolha)
+        {
+            case 1:
+                printf("\nDigite o numero a ser inserido na arvore (de 0 a 99): ");
+                scanf("%i", &numero);
+                if(numero<100 && numero>-1)
+                {
+                    inserir(&semente, numero);
+                    printf("\nResultado:\n");
+                    exibirEmNiveis(semente);
+                    rotacoes = balancearArvore(&semente);
+                    if(rotacoes)
+                    {
+                        if(rotacoes > 1)
+                            printf("\nResultado depois de %i rotacoes:\n", rotacoes);
+                        else
+                            printf("\nResultado depois de %i rotacao:\n", rotacoes);
+
+                        exibirEmNiveis(semente);
+                    }
+                }
+                else
+                    printf("ERRO! Numero invalido.\n");
+                break;
+            case 2:
+                imprimirEmOrdem(semente.raiz);
+                break;
+            case 3:
+                printf("\nDigite o numero a ser removido da arvore: ");
+                scanf("%i", &numero);
+                removerNo(&semente, numero);
+                printf("\nResultado:\n");
+                exibirEmNiveis(semente);
+                rotacoes = balancearArvore(&semente);
+                if(rotacoes)
+                {
+                    printf("\nResultado depois de %i rotacoes:\n", rotacoes);
+                    exibirEmNiveis(semente);
+                }
+                break;
+            case 0:
+                break;
+            default:
+                printf("opcao invalida\n");
+                break;
+
+        }
+    }while(escolha!=0);
+
+    semente.raiz = limparSubArvore(semente.raiz);
 }
 
 int inserir(tPontArvore *semente, int num)
@@ -191,6 +287,8 @@ void exibirEmNiveis (tPontArvore semente)
         imprimirEmNiveis(semente.raiz, i, semente.altura);
         printf("\n"); //Coloca o nível seguinte em outra linha
     }
+
+    printf("\n\n");
 
     return;
 }
@@ -348,6 +446,17 @@ int removerNo (tPontArvore *semente, int num)
     return 1;
 }
 
+tNo* limparSubArvore(tNo *raiz)
+{
+    if(raiz)
+    {
+        limparSubArvore(raiz->e);
+        limparSubArvore(raiz->d);
+        free(raiz);
+    }
+    return NULL;
+
+}
 //Recebe um nó e atualiza o nível de todos os elementos que estão abaixo dele
 void atualizarNivelDosElementos (tNo *raiz)
 {
@@ -376,18 +485,20 @@ int atualizarAltura(tNo *raiz, int altura)
 
 
 //Chama a "calcFatorEBalanceia()" para que esta balanceie a árvore recursivamente
-void balancearArvore (tPontArvore *semente)
+int balancearArvore (tPontArvore *semente)
 {
-    semente->raiz = calcFatorEBalanceia(semente->raiz, &(semente->altura), semente);
-    semente->raiz = calcFatorEBalanceia(semente->raiz, &(semente->altura), semente);
+    int sinalizador = 0;
+    semente->raiz = calcFatorEBalanceia(semente->raiz, &(semente->altura), semente, &sinalizador);
+    return sinalizador;
 }
 
 
 //Atribui um peso para os galhos da direita e da esquerda de uma sub árvore, calcula o fator de balanceamento
 //do nó, chama as rotações quando necessárias e envia para o nó pai o seu peso atravéz do "*peso"
-tNo* calcFatorEBalanceia (tNo *raiz, int *peso, tPontArvore *pImprimir)
+tNo* calcFatorEBalanceia (tNo *raiz, int *peso, tPontArvore *pImprimir, int *sinalizador)
 {
     int e, d;
+    tNo *aux; //receberá a nova raiz em caso de balanceamento
 
     if(!raiz)
     {
@@ -395,8 +506,8 @@ tNo* calcFatorEBalanceia (tNo *raiz, int *peso, tPontArvore *pImprimir)
         return NULL;
     }
 
-    raiz->e = calcFatorEBalanceia(raiz->e, &e, pImprimir);
-    raiz->d = calcFatorEBalanceia(raiz->d, &d, pImprimir);
+    raiz->e = calcFatorEBalanceia(raiz->e, &e, pImprimir, sinalizador);
+    raiz->d = calcFatorEBalanceia(raiz->d, &d, pImprimir, sinalizador);
 
     if(e>d)
         *peso = 1 + e;
@@ -406,7 +517,12 @@ tNo* calcFatorEBalanceia (tNo *raiz, int *peso, tPontArvore *pImprimir)
     raiz->fatorEquilibrio = d - e;
 
     if(raiz->fatorEquilibrio > 1 || raiz->fatorEquilibrio < -1)
-        return balanceadorDeSubArvore(raiz, pImprimir);
+    {
+        (*sinalizador)++;
+        (*peso)--;
+        aux = balanceadorDeSubArvore(raiz, pImprimir);
+        return aux;
+    }
     else
         return raiz;
 
@@ -417,7 +533,7 @@ tNo* balanceadorDeSubArvore(tNo* raiz, tPontArvore *pImprimir)
 {
     tNo *aux;
 
-    printf("precisa balancear o elemento %i que esta no nivel %i\n", raiz->valor, raiz->nivel);
+    printf("precisa balancear o elemento %i, que esta no nivel %i, cujo fator de balanceamento e %i\n", raiz->valor, raiz->nivel, raiz->fatorEquilibrio);
 
     if(raiz->fatorEquilibrio > 1) //"raiz->fator" positivo
     {
@@ -429,12 +545,6 @@ tNo* balanceadorDeSubArvore(tNo* raiz, tPontArvore *pImprimir)
             getchar();
         }
         aux = girarSentidoAntihorario(raiz);
-
-        if(!atualizarAltura(pImprimir->raiz, pImprimir->altura))
-            pImprimir->altura--;
-
-        exibirSubArvoreEmNiveis(aux, pImprimir->altura);
-        getchar();
     }
     else //"raiz->fator" negativo
     {
@@ -446,13 +556,13 @@ tNo* balanceadorDeSubArvore(tNo* raiz, tPontArvore *pImprimir)
             getchar();
         }
         aux = girarSentidoHorario(raiz);
-
-        if(!atualizarAltura(pImprimir->raiz, pImprimir->altura))
-            pImprimir->altura--;
-
-        exibirSubArvoreEmNiveis(aux, pImprimir->altura);
-        getchar();
     }
+
+     if(!atualizarAltura(pImprimir->raiz, pImprimir->altura))
+        pImprimir->altura--;
+
+    exibirSubArvoreEmNiveis(aux, pImprimir->altura);
+    getchar();
 
     return aux;
 }
