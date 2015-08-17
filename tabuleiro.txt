@@ -1,0 +1,26 @@
+n
+e
+n
+e
+n
+p 3
+n
+b
+n
+v 6
+p 2
+b
+b
+n
+e
+n
+a 2
+n
+n
+v 2
+n
+b
+n
+n
+n
+f
